@@ -18,6 +18,11 @@
 #include <chrono>
 #include <thread>
 
+#include "osrf_testing_tools_cpp/memory_tools/memory_tools.hpp"
+
+#include "rcutils/macros.h"
+#include "rcutils/testing/fault_injection.h"
+
 /// Retry until `timeout` expires, sleeping for `delay` in between attempts.
 /*
  * \note Time is measured against OS provided steady clock.
@@ -26,5 +31,28 @@
     auto loop_start_time = std::chrono::steady_clock::now(); \
     std::chrono::steady_clock::now() - loop_start_time < timeout; \
     std::this_thread::sleep_for(delay))
+
+class ScopedFaultySystemMemory
+{
+public:
+  ScopedFaultySystemMemory()
+  {
+    osrf_testing_tools_cpp::memory_tools::initialize();
+    osrf_testing_tools_cpp::memory_tools::on_malloc(maybe_throw_bad_alloc);
+    osrf_testing_tools_cpp::memory_tools::on_calloc(maybe_throw_bad_alloc);
+    osrf_testing_tools_cpp::memory_tools::on_realloc(maybe_throw_bad_alloc);
+  }
+
+  ~ScopedFaultySystemMemory()
+  {
+    osrf_testing_tools_cpp::memory_tools::uninitialize();
+  }
+
+private:
+  static void maybe_throw_bad_alloc()
+  {
+    RCUTILS_CAN_FAIL_WITH(throw std::bad_alloc{});
+  }
+};
 
 #endif  // TESTING_MACROS_HPP_
