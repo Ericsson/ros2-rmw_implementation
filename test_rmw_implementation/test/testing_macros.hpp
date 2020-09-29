@@ -41,10 +41,12 @@ public:
     osrf_testing_tools_cpp::memory_tools::on_malloc(maybe_throw_bad_alloc);
     osrf_testing_tools_cpp::memory_tools::on_calloc(maybe_throw_bad_alloc);
     osrf_testing_tools_cpp::memory_tools::on_realloc(maybe_throw_bad_alloc);
+    osrf_testing_tools_cpp::memory_tools::enable_monitoring();
   }
 
   ~ScopedFaultySystemMemory()
   {
+    osrf_testing_tools_cpp::memory_tools::disable_monitoring();
     osrf_testing_tools_cpp::memory_tools::uninitialize();
   }
 
